@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 
 var rule = require("../../../lib/rules/map"),
-    RuleTester = require("eslint").RuleTester;
+  RuleTester = require("eslint").RuleTester;
 
 //------------------------------------------------------------------------------
 // Tests
@@ -17,19 +17,63 @@ var rule = require("../../../lib/rules/map"),
 
 var ruleTester = new RuleTester();
 ruleTester.run("map", rule, {
-    valid: [
-        // give me some code that won't trigger a warning
-    ],
+  valid: [
+    `['1', '2', '3'].map(console.log)`,
+    `[[1, 2, 3], [1, 2, 3]].map(console.log)`,
+    `[1, 2, 3].map(console.log)`,
+    `
+      var obj = {
+        a: 1,
+        b: 2,
+        c: 3
+      };
+      var fn = function(item) { return item + 1; };
+      var mappedObj = _.map(obj, fn);
+      var obj = [1, 2, 3];
+    `,
+    `_.map("string", console.log)`,
+    `
+      var fn = function(item) { return item + 1; };
+      _.map({}, fn)
+    `
+  ],
 
-    invalid: [
+  invalid: [
+    {
+      code: `
+        var mappedArr = _.map([1, 2, 3], fn);
+      `,
+      errors: [
         {
-            code: "Cannot convert lodash map to native",
-            errors: [
-                {
-                    message: "Fill me in.",
-                    type: "Me too"
-                }
-            ]
+          message: "Replace with native Array#map"
         }
-    ]
+      ]
+    },
+    {
+      code: `
+        var arr = [1, 2, 3];
+        var fn = function(item) { return item + 1; };
+        var mappedArr = _.map(arr, fn);
+      `,
+      errors: [
+        {
+          message: "Replace with native Array#map"
+        }
+      ]
+    },
+    {
+      code: `
+        var arr;
+        var arr = [1, 2, 3];
+        var fn = function(item) { return item + 1; };
+        var mappedArr = _.map(arr, fn);
+        var arr = "string";
+      `,
+      errors: [
+        {
+          message: "Replace with native Array#map"
+        }
+      ]
+    }
+  ]
 });
